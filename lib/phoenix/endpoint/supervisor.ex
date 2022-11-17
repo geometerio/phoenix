@@ -75,7 +75,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod) ++
+        socket_children(mod, conf) ++
         server_children(mod, conf, server?) ++
         watcher_children(mod, conf, server?)
 
@@ -108,10 +108,32 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint) do
+  defp socket_children(endpoint, conf) do
     endpoint.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
-    |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
+    |> Enum.map(fn {_, socket, opts} ->
+
+      provided_endpoint_name = conf[:name]
+      default_socket_name = Module.concat(endpoint, socket)
+
+      socket_name =
+        cond do
+          provided_endpoint_name == endpoint -> default_socket_name
+          provided_endpoint_name == nil -> default_socket_name
+          true -> :"#{default_socket_name}-#{provided_endpoint_name}"
+        end
+
+      # IO.inspect(opts, label: "socket_children opts")
+      # IO.inspect(endpoint, label: "socket_children endpoint")
+      # IO.inspect(socket, label: "socket_children socket")
+      IO.inspect(socket_name, label: "socket_children socket_name")
+
+      opts = opts |> Keyword.merge(socket_name: socket_name)
+
+      IO.inspect(opts, label: "socket_children opts")
+
+      socket.child_spec([endpoint: endpoint] ++ opts)
+    end)
   end
 
   defp config_children(mod, conf, default_conf) do
@@ -124,6 +146,8 @@ defmodule Phoenix.Endpoint.Supervisor do
         provided_name == nil -> Module.concat(mod, "Config")
         true -> "#{provided_name}_config" |> String.to_atom()
       end
+
+    IO.puts("config_name: #{config_name}")
 
     args = {endpoint_name, conf, default_conf, name: config_name}
     [{Phoenix.Config, args}]

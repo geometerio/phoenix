@@ -414,10 +414,12 @@ defmodule Phoenix.Socket do
   ## CALLBACKS IMPLEMENTATION
 
   def __child_spec__(handler, opts, socket_options) do
+    IO.puts("child_spec socket_name = #{opts[:socket_name]}")
     endpoint = Keyword.fetch!(opts, :endpoint)
     opts = Keyword.merge(socket_options, opts)
     partitions = Keyword.get(opts, :partitions, System.schedulers_online())
-    args = {endpoint, handler, partitions}
+
+    args = {endpoint, opts[:socket_name], partitions}
     Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end
 
