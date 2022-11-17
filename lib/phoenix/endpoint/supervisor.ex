@@ -36,13 +36,16 @@ defmodule Phoenix.Endpoint.Supervisor do
       case mod.init(:supervisor, env_conf) do
         {:ok, init_conf} ->
           if is_nil(Application.get_env(otp_app, mod)) and init_conf == env_conf do
-            Logger.warning("no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}")
+            Logger.warning(
+              "no configuration found for otp_app #{inspect(otp_app)} and module #{inspect(mod)}"
+            )
           end
 
           init_conf
 
         other ->
-          raise ArgumentError, "expected init/2 callback to return {:ok, config}, got: #{inspect other}"
+          raise ArgumentError,
+                "expected init/2 callback to return {:ok, config}, got: #{inspect(other)}"
       end
 
     extra_conf = [
@@ -59,7 +62,9 @@ defmodule Phoenix.Endpoint.Supervisor do
     server? = server?(conf)
 
     if conf[:instrumenters] do
-      Logger.warning(":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect")
+      Logger.warning(
+        ":instrumenters configuration for #{inspect(mod)} is deprecated and has no effect"
+      )
     end
 
     if server? and conf[:code_reloader] do
@@ -75,7 +80,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
-        socket_children(mod) ++
+        socket_children(mod, conf) ++
         server_children(mod, conf, server?) ++
         watcher_children(mod, conf, server?)
 
@@ -86,19 +91,19 @@ defmodule Phoenix.Endpoint.Supervisor do
     pub_conf = conf[:pubsub]
 
     if pub_conf do
-      Logger.warning """
-      The :pubsub key in your #{inspect mod} is deprecated.
+      Logger.warning("""
+      The :pubsub key in your #{inspect(mod)} is deprecated.
 
       You must now start the pubsub in your application supervision tree.
       Go to lib/my_app/application.ex and add the following:
 
-          {Phoenix.PubSub, #{inspect pub_conf}}
+          {Phoenix.PubSub, #{inspect(pub_conf)}}
 
       Now, back in your config files in config/*, you can remove the :pubsub
       key and add the :pubsub_server key, with the PubSub name:
 
-          pubsub_server: #{inspect pub_conf[:name]}
-      """
+          pubsub_server: #{inspect(pub_conf[:name])}
+      """)
     end
 
     if pub_conf[:adapter] do
@@ -108,10 +113,14 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp socket_children(endpoint) do
+  defp socket_children(endpoint, conf) do
     endpoint.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
-    |> Enum.map(fn {_, socket, opts} -> socket.child_spec([endpoint: endpoint] ++ opts) end)
+    |> Enum.map(fn {_, socket, opts} ->
+      provided_endpoint_name = conf[:name]
+      opts = opts |> Keyword.merge(provided_endpoint_name: provided_endpoint_name)
+      socket.child_spec([endpoint: endpoint] ++ opts)
+    end)
   end
 
   defp config_children(mod, conf, default_conf) do

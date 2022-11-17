@@ -3,11 +3,11 @@ defmodule Phoenix.Socket.PoolSupervisor do
   use Supervisor
 
   # TODO: Use PartitionSupervisor once we require Elixir v1.14
-  def start_link({endpoint, name, partitions}) do
+  def start_link({endpoint, handler, name, partitions}) do
     Supervisor.start_link(
       __MODULE__,
-      {endpoint, name, partitions},
-      name: Module.concat(endpoint, name)
+      {endpoint, handler, partitions},
+      name: name
     )
   end
 
