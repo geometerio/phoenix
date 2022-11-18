@@ -13,15 +13,30 @@ defmodule Phoenix.Config do
   Starts a Phoenix configuration handler.
   """
   def start_link({module, config, defaults, opts}) do
+    permanent = Keyword.keys(defaults)
     IO.puts("  ")
     IO.puts("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
-    IO.puts("Config start_link() --------------------")
-    IO.inspect(opts, label: "Config start_link() opts")
-    IO.inspect(config, label: "Config start_link() config")
-    IO.inspect(defaults, label: "Config start_link() defaults")
+    IO.puts("Phoenix.Config.start_link() ")
+    IO.puts("opts                           : #{inspect(opts)}")
+    IO.puts("module                         : #{inspect(module)}")
+    IO.puts("config[:name]                  : #{config[:name]}")
+    IO.puts("config[:endpoint_name]         : #{config[:endpoint_name]}")
+    IO.puts("config[:config_name]           : #{config[:config_name]}")
+    IO.puts("permanent                      : #{inspect(permanent)}")
+    IO.puts(" ")
+    IO.puts("Calling  GenServer.start_link(__MODULE__, {module, config, permanent}, opts)")
+
+    IO.puts("   with                      (")
+    IO.puts("           #{inspect(__MODULE__)}, ")
+    IO.puts("          {#{inspect(module)}, ")
+    IO.puts("           #{inspect(config)},")
+    IO.puts("           #{inspect(permanent)}")
+    IO.puts("          },")
+    IO.puts("           #{inspect(opts)}")
+    IO.puts("   )")
+
     IO.puts(" ")
 
-    permanent = Keyword.keys(defaults)
     GenServer.start_link(__MODULE__, {module, config, permanent}, opts)
   end
 
@@ -141,9 +156,11 @@ defmodule Phoenix.Config do
   def init({module, config, permanent}) do
     IO.puts(" ")
     IO.puts("iiiiiiiiiiiiiiiiiiiiiiiiii")
-    IO.puts("In Phoenix.Config.init()....")
+    IO.puts("Phoenix.Config.init()....")
     IO.puts("module                  : #{module}")
     IO.puts("config                  : #{inspect(config)}")
+    IO.puts("config[:endpoint_name]  : #{config[:endpoint_name]}")
+    IO.puts("config[:config_name]    : #{config[:config_name]}")
     IO.puts("permanent               : #{inspect(permanent)}")
 
     :ets.new(module, [:named_table, :public, read_concurrency: true])

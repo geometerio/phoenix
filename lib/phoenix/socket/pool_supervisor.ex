@@ -7,6 +7,9 @@ defmodule Phoenix.Socket.PoolSupervisor do
     IO.puts(" ")
     IO.puts("xxxxxxxxxxxxxxxxx")
     IO.puts("Phoenix.Socket.PoolSupervisor.start_link()....")
+    IO.puts("socket_name           : #{socket_name}")
+    IO.puts("config_name           : #{config_name}")
+    IO.puts("partitions            : #{partitions}")
 
     Supervisor.start_link(
       __MODULE__,
