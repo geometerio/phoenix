@@ -13,6 +13,14 @@ defmodule Phoenix.Config do
   Starts a Phoenix configuration handler.
   """
   def start_link({module, config, defaults, opts}) do
+    IO.puts("  ")
+    IO.puts("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+    IO.puts("Config start_link() --------------------")
+    IO.inspect(opts, label: "Config start_link() opts")
+    IO.inspect(config, label: "Config start_link() config")
+    IO.inspect(defaults, label: "Config start_link() defaults")
+    IO.puts(" ")
+
     permanent = Keyword.keys(defaults)
     GenServer.start_link(__MODULE__, {module, config, permanent}, opts)
   end
@@ -131,6 +139,13 @@ defmodule Phoenix.Config do
   # Callbacks
 
   def init({module, config, permanent}) do
+    IO.puts(" ")
+    IO.puts("iiiiiiiiiiiiiiiiiiiiiiiiii")
+    IO.puts("In Phoenix.Config.init()....")
+    IO.puts("module                  : #{module}")
+    IO.puts("config                  : #{inspect(config)}")
+    IO.puts("permanent               : #{inspect(permanent)}")
+
     :ets.new(module, [:named_table, :public, read_concurrency: true])
     update(module, config, [])
     :ets.insert(module, {:__config__, self()})

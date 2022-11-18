@@ -428,7 +428,22 @@ defmodule Phoenix.Socket do
         true -> :"#{default_socket_name}-#{provided_endpoint_name}"
       end
 
-    args = {socket_name, provided_endpoint_name, partitions}
+    IO.puts(" ")
+    IO.puts("=================")
+    IO.puts("Phoenix.Socket.child_spec()......")
+    IO.puts("opts[:endpoint_name]            : #{opts[:endpoint_name]}")
+    IO.puts("opts[:config_name]              : #{opts[:config_name]}")
+    IO.puts("opts                            : #{inspect(opts)}")
+
+    IO.puts("socket_name:                    : #{socket_name}")
+    IO.puts("provided_endpoint_name:         : #{provided_endpoint_name}")
+    IO.puts("endpoint:                       : #{endpoint}")
+    IO.puts("default_socket_name:            : #{default_socket_name}")
+    IO.puts("name:                           : #{opts[:name]}")
+    IO.puts("handler:                        : #{handler}")
+    IO.inspect(socket_options, label: "socket_options")
+
+    args = {socket_name, opts[:config_name], partitions}
 
     Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end

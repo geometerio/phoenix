@@ -77,6 +77,36 @@ defmodule Phoenix.Endpoint.Supervisor do
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
     warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
 
+    provided_name = Keyword.get(conf, :name)
+    endpoint_name = provided_name || mod
+
+    config_name =
+      cond do
+        provided_name == mod -> Module.concat(mod, "Config")
+        provided_name == nil -> Module.concat(mod, "Config")
+        true -> "#{provided_name}_config" |> String.to_atom()
+      end
+
+    IO.puts(" ")
+    IO.puts("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    IO.puts("Phoenix.Endpoint.Supervisor.init().....")
+    IO.puts("provided_name                : #{provided_name}")
+    IO.puts("endpoint_name                : #{endpoint_name}")
+    IO.puts("config_name                  : #{config_name}")
+
+    conf =
+      conf
+      |> Keyword.merge(endpoint_name: endpoint_name)
+      |> Keyword.merge(config_name: config_name)
+
+    secret_conf =
+      secret_conf
+      |> Keyword.merge(endpoint_name: endpoint_name)
+      |> Keyword.merge(config_name: config_name)
+
+    IO.puts("conf[:endpoint_name]         : #{conf[:endpoint_name]}")
+    IO.puts("conf[:config_name]           : #{conf[:config_name]}")
+
     children =
       config_children(mod, secret_conf, default_conf) ++
         pubsub_children(mod, conf) ++
@@ -117,23 +147,48 @@ defmodule Phoenix.Endpoint.Supervisor do
     endpoint.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
     |> Enum.map(fn {_, socket, opts} ->
-      opts = opts |> Keyword.merge(provided_endpoint_name: conf[:name])
+      opts =
+        opts
+        |> Keyword.merge(endpoint_name: conf[:endpoint_name])
+        |> Keyword.merge(config_name: conf[:config_name])
+
+      IO.puts(" ")
+      IO.puts("scscscscscscscscscscscscscsc")
+      IO.puts("Phoenix.Endpoint.Supervisor.socket_children()...")
+      IO.puts("endpoint                : #{endpoint}")
+      IO.puts("opts[:endpoint_name]    : #{opts[:endpoint_name]}")
+      IO.puts("opts[:config_name]      : #{opts[:config_name]}")
+
       socket.child_spec([endpoint: endpoint] ++ opts)
     end)
   end
 
-  defp config_children(mod, conf, default_conf) do
-    provided_name = Keyword.get(conf, :name)
-    endpoint_name = provided_name || mod
+  defp config_children(_mod, conf, default_conf) do
+    # provided_name = Keyword.get(conf, :name)
+    # endpoint_name = provided_name || mod
 
-    config_name =
-      cond do
-        provided_name == mod -> Module.concat(mod, "Config")
-        provided_name == nil -> Module.concat(mod, "Config")
-        true -> "#{provided_name}_config" |> String.to_atom()
-      end
+    # config_name =
+    #   cond do
+    #     provided_name == mod -> Module.concat(mod, "Config")
+    #     provided_name == nil -> Module.concat(mod, "Config")
+    #     true -> "#{provided_name}_config" |> String.to_atom()
+    #   end
 
-    args = {endpoint_name, conf, default_conf, name: config_name}
+    IO.puts(" ")
+    IO.puts("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    IO.puts("Phoenix.Endpoint.Supervisor.config_children().....")
+    # IO.puts("provided_name                : #{provided_name}")
+    # IO.puts("endpoint_name                : #{endpoint_name}")
+    # IO.puts("config_name                  : #{config_name}")
+    #
+    # conf = conf |> Keyword.merge(endpoint_name: endpoint_name, config_name: config_name)
+
+    IO.puts("conf[:endpoint_name]         : #{conf[:endpoint_name]}")
+    IO.puts("conf[:config_name]           : #{conf[:config_name]}")
+    IO.puts("default_conf[:endpoint_name] : #{default_conf[:endpoint_name]}")
+    IO.puts("default_conf[:config_name]   : #{default_conf[:config_name]}")
+
+    args = {conf[:config_name], conf, default_conf, name: conf[:config_name]}
     [{Phoenix.Config, args}]
   end
 
