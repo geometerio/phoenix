@@ -134,10 +134,22 @@ defmodule Phoenix.Endpoint.SupervisorTest do
     use Phoenix.Endpoint, otp_app: :phoenix
   end
 
-  # This is just here to silence the warnings about no config for TestEndpoint:
+  defmodule TestSocket do
+    use Phoenix.Socket
+    def connect(_params, socket, _connect_info), do: {:ok, socket}
+    def id(_socket), do: nil
+  end
+
+  defmodule TestEndpointWithSocket do
+    use Phoenix.Endpoint, otp_app: :phoenix
+    socket "/socket", TestSocket, websocket: true, longpoll: false
+  end
+
+  # Silence the "no configuration found" compiler warnings
   Application.put_env(:phoenix, __MODULE__.TestEndpoint, server: false)
   Application.put_env(:phoenix, __MODULE__.TestEndpoint1, server: false)
   Application.put_env(:phoenix, __MODULE__.TestEndpoint2, server: false)
+  Application.put_env(:phoenix, __MODULE__.TestEndpointWithSocket, server: false)
 
   describe "optional name config for Endpoint and EndpointConfig" do
     test "can start multiple Endpoint supervisors if they have different names - endpoint name is an atom" do
@@ -189,6 +201,28 @@ defmodule Phoenix.Endpoint.SupervisorTest do
         Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpoint)
 
       assert pid == endpoint1_pid
+    end
+
+    test "can start multiple instances of an endpoint that has a socket" do
+      {:ok, endpoint1_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpointWithSocket,
+          strategy: :one_for_one,
+          name: :endpoint1
+        )
+
+      assert Process.alive?(endpoint1_pid)
+      assert Process.whereis(:endpoint1) == endpoint1_pid
+      assert Process.whereis(:endpoint1_config) |> Process.alive?()
+
+      {:ok, endpoint2_pid} =
+        Phoenix.Endpoint.Supervisor.start_link(:phoenix, TestEndpointWithSocket,
+          strategy: :one_for_one,
+          name: :endpoint2
+        )
+
+      assert Process.alive?(endpoint2_pid)
+      assert Process.whereis(:endpoint2) == endpoint2_pid
+      assert Process.whereis(:endpoint2_config) |> Process.alive?()
     end
   end
 end

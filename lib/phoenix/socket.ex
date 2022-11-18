@@ -428,7 +428,7 @@ defmodule Phoenix.Socket do
         true -> :"#{default_socket_name}-#{provided_endpoint_name}"
       end
 
-    args = {endpoint, handler, socket_name, partitions}
+    args = {socket_name, provided_endpoint_name, partitions}
 
     Supervisor.child_spec({Phoenix.Socket.PoolSupervisor, args}, id: handler)
   end

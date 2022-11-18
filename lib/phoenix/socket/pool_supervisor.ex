@@ -3,11 +3,11 @@ defmodule Phoenix.Socket.PoolSupervisor do
   use Supervisor
 
   # TODO: Use PartitionSupervisor once we require Elixir v1.14
-  def start_link({endpoint, handler, name, partitions}) do
+  def start_link({socket_name, config_name, partitions}) do
     Supervisor.start_link(
       __MODULE__,
-      {endpoint, handler, partitions},
-      name: name
+      {socket_name, config_name, partitions},
+      name: socket_name
     )
   end
 
@@ -44,10 +44,10 @@ defmodule Phoenix.Socket.PoolSupervisor do
   end
 
   @doc false
-  def init({endpoint, name, partitions}) do
-    ref = :ets.new(name, [:public, read_concurrency: true])
+  def init({socket_name, config_name, partitions}) do
+    ref = :ets.new(config_name, [:public, read_concurrency: true])
     :ets.insert(ref, {:partitions, partitions})
-    Phoenix.Config.permanent(endpoint, {:socket, name}, ref)
+    Phoenix.Config.permanent(config_name, {:socket, socket_name}, ref)
 
     children =
       for i <- 0..(partitions - 1) do

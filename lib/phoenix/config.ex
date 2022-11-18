@@ -29,8 +29,8 @@ defmodule Phoenix.Config do
 
   Permanent configuration is not deleted on hot code reload.
   """
-  def permanent(module, key, value) do
-    pid = :ets.lookup_element(module, :__config__, 2)
+  def permanent(tab, key, value) do
+    pid = :ets.lookup_element(tab, :__config__, 2)
     GenServer.call(pid, {:permanent, key, value})
   end
 

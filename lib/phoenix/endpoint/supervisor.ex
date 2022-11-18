@@ -117,8 +117,7 @@ defmodule Phoenix.Endpoint.Supervisor do
     endpoint.__sockets__
     |> Enum.uniq_by(&elem(&1, 1))
     |> Enum.map(fn {_, socket, opts} ->
-      provided_endpoint_name = conf[:name]
-      opts = opts |> Keyword.merge(provided_endpoint_name: provided_endpoint_name)
+      opts = opts |> Keyword.merge(provided_endpoint_name: conf[:name])
       socket.child_spec([endpoint: endpoint] ++ opts)
     end)
   end
